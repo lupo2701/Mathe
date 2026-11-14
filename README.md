@@ -25,6 +25,8 @@ Teil B – Gleichungen: 6 Gleichungen verstehen · 7 Gleichungen lösen · 8 Tex
 
 ## Besonderheiten
 
+- **🗣️ Einfache Sprache:** Oben in der Leiste an- und ausschaltbar (auch beim Start und unter „Ich“). Jede Station hat einen Text in einfacher Sprache mit „So gehst du vor“-Schritten und Wörter-Hilfe. In jeder Aufgabe gibt es den Knopf **„Einfach erklärt“** (bei eingeschalteter einfacher Sprache öffnet er sich automatisch) und den **💡 Tipp** – beide kosten keine Punkte.
+
 - **Unendlich viele Aufgaben:** Alle Aufgaben werden zufällig erzeugt (über 100 Aufgabentypen).
 - **Echte Term-Eingabe:** Schüler tippen Terme selbst ein (Bildschirmtasten für x, ², Klammern …). Die App erkennt gleichwertige Terme (`3x+12` = `12+3x`) und gibt Rückmeldung, wenn ein Ergebnis gleichwertig, aber noch nicht fertig vereinfacht oder ausgeklammert ist.
 - **Lösungsweg zu jeder Aufgabe**, falsch gelöste Aufgaben kommen in ähnlicher Form am Ende der Runde nochmal.

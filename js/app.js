@@ -10,7 +10,7 @@
   const DEFAULT = {
     name: "", avatar: "🦊", xp: 0, stars: {}, read: {}, badges: {}, streak: { last: null, count: 0 },
     daily: {}, dailyCount: 0, blitzBest: 0, waageSolved: 0, memoryBest: {}, bossWins: 0, rounds: 0, answered: 0, correct: 0,
-    settings: { sound: false, fx: true }, lastStation: null, readLevel: 1,
+    settings: { sound: false, fx: true, easy: false }, lastStation: null, readLevel: 1,
   };
   let S = load();
   function load() {
@@ -26,9 +26,9 @@
   const today = () => new Date().toLocaleDateString("sv-SE");
   const station = id => STATIONS.find(s => s.id === id);
   const LV = {
-    1: { key: 1, name: "Basis", icon: "🌱", cls: "basis", desc: "Grundlagen sichern", xp: 10 },
-    2: { key: 2, name: "Standard", icon: "🚀", cls: "standard", desc: "Sicher anwenden", xp: 15 },
-    3: { key: 3, name: "Profi", icon: "🏆", cls: "profi", desc: "Vertiefung & Knobeln", xp: 20 },
+    1: { key: 1, name: "Basis", icon: "🌱", cls: "basis", desc: "leicht – zum Reinkommen", xp: 10 },
+    2: { key: 2, name: "Standard", icon: "🚀", cls: "standard", desc: "mittel – sicher werden", xp: 15 },
+    3: { key: 3, name: "Profi", icon: "🏆", cls: "profi", desc: "schwer – zum Knobeln", xp: 20 },
   };
   const lvChip = l => `<span class="lvchip ${LV[l].cls}">${LV[l].icon} ${LV[l].name}</span>`;
   const starsOf = (id, l) => S.stars[`${id}:${l}`] || 0;
@@ -147,9 +147,16 @@
     const L = levelInfo();
     $("#hud").innerHTML = `
       <span class="pill" title="Lernserie (Tage in Folge)">🔥 ${S.streak.count || 0}</span>
-      <span class="pill" title="Sterne">⭐ ${totalStars()}</span>
+      <button class="pill easy ${S.settings.easy ? "on" : ""}" id="easyBtn" title="Einfache Sprache an/aus" aria-pressed="${S.settings.easy}">🗣️ Einfach</button>
       <a class="pill lvl" href="#/ich" title="${esc(L.name)}"><span class="pav">${S.avatar}</span> Lv ${L.n}<span class="pbar"><span style="width:${L.pct}%"></span></span></a>`;
   }
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#easyBtn")) return;
+    S.settings.easy = !S.settings.easy; save(); sfx.click();
+    toast(S.settings.easy ? "🗣️ Einfache Sprache ist <b>an</b>" : "Einfache Sprache ist aus");
+    if (/^#\/(quiz|blitz|waage|memory|boss|challenge)\/./.test(location.hash) ) { renderTop(); const b = $("#easyHelpBtn"); if (b && S.settings.easy) b.click(); return; }
+    route();
+  });
   function setNav(name) {
     $$("[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === name));
   }
@@ -185,6 +192,7 @@
         <p class="muted small">Jede Aufgabe gibt es in drei Niveaus: ${lvChip(1)} ${lvChip(2)} ${lvChip(3)} – du entscheidest selbst.</p>
         <h3>Wähle deinen Avatar</h3>
         <div class="avpick">${AVATARS.filter(a => a.lv === 1).map(a => `<button type="button" class="av ${a.a === av ? "sel" : ""}" data-av="${a.a}">${a.a}</button>`).join("")}</div>
+        <label class="sw center-sw"><input type="checkbox" id="easyIn" ${S.settings.easy ? "checked" : ""}><span>🗣️ Einfache Sprache (kürzere Sätze, mehr Hilfen)</span></label>
         <form id="nameForm" class="row">
           <input id="nameIn" maxlength="20" placeholder="Dein Spitzname" autocomplete="off" required>
           <button class="btn primary">Los geht’s</button>
@@ -192,14 +200,13 @@
         <p class="muted small">Spitzname und Fortschritt bleiben nur auf diesem Gerät. <a class="link" href="#/info">Datenschutz</a></p>
       </section>`;
     $$(".av", app).forEach(b => b.onclick = () => { av = b.dataset.av; $$(".av", app).forEach(x => x.classList.toggle("sel", x === b)); sfx.click(); });
-    $("#nameForm").onsubmit = e => { e.preventDefault(); S.name = $("#nameIn").value.trim().slice(0, 20) || "Mathe-Fan"; S.avatar = av; save(); location.hash = "#/"; route(); };
+    $("#nameForm").onsubmit = e => { e.preventDefault(); S.name = $("#nameIn").value.trim().slice(0, 20) || "Mathe-Fan"; S.avatar = av; S.settings.easy = $("#easyIn").checked; save(); location.hash = "#/"; route(); };
   }
 
   // ---------- Start ----------
   function viewHome() {
     const L = levelInfo(), ns = nextStation(), rl = recLevel(ns.id);
     const d = S.daily[today()] || {};
-    const bossOpen = bossUnlocked();
     app.innerHTML = `
       <section class="hero card">
         <div class="hero-av">${S.avatar}</div>
@@ -207,28 +214,23 @@
           <p class="muted">Hallo ${esc(S.name)}!</p>
           <h1>${esc(L.name)} <span class="lv">Level ${L.n}</span></h1>
           <div class="xpbar"><div style="width:${L.pct}%"></div></div>
-          <p class="muted small">${L.next ? `Noch ${L.next.xp - S.xp} XP bis „${esc(L.next.name)}“` : "Höchstes Level erreicht!"} · ${S.xp} XP</p>
+          <p class="muted small">${L.next ? `Noch ${L.next.xp - S.xp} XP bis Level ${L.n + 1}` : "Höchstes Level erreicht!"}</p>
         </div>
-        <div class="hero-side"><div class="big">🔥 ${S.streak.count || 0}</div><div class="muted small">Tage</div><div class="big">⭐ ${totalStars()}</div><div class="muted small">von 72</div></div>
       </section>
 
-      <a class="card continue" href="#/station/${ns.id}" style="--c:${ns.color}">
-        <div class="m-icon">${ns.icon}</div>
-        <div class="grow"><p class="eyebrow">Weiterlernen</p><h3>${ns.nr}. ${esc(ns.title)}</h3><p class="muted small">Empfehlung: ${lvChip(rl)}</p></div>
-        <span class="go">→</span>
+      <a class="card continue big-go" href="#/station/${ns.id}" style="--c:${ns.color}">
+        <div class="m-icon xl">${ns.icon}</div>
+        <div class="grow"><p class="eyebrow">Hier weitermachen</p><h2>${esc(ns.title)}</h2><p class="muted small">Für dich: ${lvChip(rl)}</p></div>
+        <span class="go">▶</span>
       </a>
 
-      <div class="grid grid-2">
+      <div class="grid grid-2 two-only">
         <a class="card tile daily ${Object.keys(d).length ? "done" : ""}" href="#/challenge">
-          <div class="t-big">📅</div><h3>Tages-Challenge</h3>
-          <p class="muted small">${Object.keys(d).length ? "Heute geschafft ✓ – morgen gibt’s eine neue" : "5 Aufgaben · Bonus-XP · für alle gleich"}</p></a>
-        <a class="card tile" href="#/blitz"><div class="t-big">⚡</div><h3>Blitzrunde</h3><p class="muted small">60 Sekunden · Rekord: ${S.blitzBest}</p></a>
-        <a class="card tile" href="#/waage"><div class="t-big">⚖️</div><h3>Waage-Trainer</h3><p class="muted small">Gleichungen Schritt für Schritt</p></a>
-        <a class="card tile ${bossOpen ? "" : "locked"}" href="#/boss"><div class="t-big">${bossOpen ? "🐉" : "🔒"}</div><h3>Term-Drache</h3><p class="muted small">${bossOpen ? "Bereit zum Kampf?" : `Sterne in 4 Stationen sammeln (${unlockedCount()}/4)`}</p></a>
+          <div class="t-big">📅</div><h3>Aufgabe des Tages</h3>
+          <p class="muted small">${Object.keys(d).length ? "Heute geschafft ✓" : "5 Aufgaben · Bonus"}</p></a>
+        <a class="card tile" href="#/ueben"><div class="t-big">🎮</div><h3>Spiele</h3><p class="muted small">Blitz, Waage, Memory, Drache</p></a>
       </div>
-
-      <h2 class="section">Dein Lernweg</h2>
-      ${pathHTML()}`;
+      ${S.settings.easy ? "" : `<p class="muted small center-text">Tipp: Oben bei <b>🗣️ Einfach</b> kannst du einfache Sprache einschalten.</p>`}`;
   }
   function pathHTML() {
     return `<div class="path">${STATIONS.map((s, i) => {
@@ -273,7 +275,7 @@
       <a class="back" href="#/lernen">← Alle Stationen</a>
       <section class="card shead" style="--c:${s.color}">
         <div class="m-icon xl">${s.icon}</div>
-        <div><p class="eyebrow">Station ${s.nr} · ${s.part}</p><h1>${esc(s.title)}</h1><p class="muted">${esc(s.short)} · ${starStr(Math.min(3, Math.round(stationStars(s.id) / 3)))} ${stationStars(s.id)}/9</p></div>
+        <div><p class="eyebrow">Station ${s.nr} · ${s.part}</p><h1>${esc(s.title)}</h1><p class="muted">${esc(s.short)}</p></div>
       </section>
       <nav class="tabs" role="tablist">${tabs.map(([k, l]) => `<a role="tab" href="#/station/${id}/${k}" class="${k === tab ? "active" : ""}">${l}</a>`).join("")}</nav>
       <div id="tabbody"></div>`;
@@ -282,22 +284,30 @@
     else if (tab === "beispiele") stationExamples(s, body);
     else stationPractice(s, body);
   }
+  function easyBlock(s, withText = true) {
+    const e = s.easy;
+    return `${withText ? `<div class="easy-text">${e.text.map(t => `<p>${t}</p>`).join("")}</div>` : ""}
+      <h3>👣 So gehst du vor</h3><ol class="easy-steps">${e.steps.map(t => `<li>${t}</li>`).join("")}</ol>
+      <h3>💬 Wörter-Hilfe</h3><div class="words">${e.words.map(([w, x]) => `<div><b>${esc(w)}</b><span>→ ${x}</span></div>`).join("")}</div>`;
+  }
   function stationRead(s, body) {
-    const lvl = S.readLevel || 1;
+    let lvl = S.readLevel; if (lvl == null || ![0, 1, 3].includes(lvl)) lvl = 1;
+    if (S.settings.easy && S._readSet !== s.id) lvl = 0;
+    const doneBtn = S.read[s.id] ? `<a class="btn primary" href="#/station/${s.id}/beispiele">Weiter zu den Beispielen →</a>` : `<button class="btn primary" id="readDone">✓ Verstanden! (+10 XP)</button>`;
     body.innerHTML = `
-      <section class="card goals"><h3>🎯 Das lernst du hier</h3><ul class="checks">${s.goals.map((g, i) => `<li class="${i === s.goals.length - 1 && /^Profi/.test(g) ? "profi-goal" : ""}">${esc(g)}</li>`).join("")}</ul></section>
-      <div class="seg" role="group" aria-label="Niveau des Textes">
-        <button class="${lvl === 1 ? "active" : ""}" data-r="1">🌱 Grundlagen</button>
-        <button class="${lvl === 3 ? "active" : ""}" data-r="3">🏆 Grundlagen + Vertiefung</button>
+      <div class="seg" role="group" aria-label="Wie soll der Text sein?">
+        <button class="${lvl === 0 ? "active" : ""}" data-r="0">🗣️ Einfach</button>
+        <button class="${lvl === 1 ? "active" : ""}" data-r="1">📖 Normal</button>
+        <button class="${lvl === 3 ? "active" : ""}" data-r="3">🏆 Mehr wissen</button>
       </div>
-      <section class="card prose">${s.basis}${lvl === 3 ? `<div class="deep"><h3>🏆 Vertiefung</h3>${s.profi}</div>` : `<p class="muted small">Du willst mehr wissen? Schalte oben auf „Vertiefung“.</p>`}</section>
-      <section class="card merke"><h3>📌 Merke</h3><p>${s.merke}</p></section>
+      ${lvl === 0 ? `<section class="card prose easy">${easyBlock(s)}</section>` : `
+      <section class="card goals"><h3>🎯 Das lernst du hier</h3><ul class="checks">${s.goals.filter(g => lvl === 3 || !/^Profi/.test(g)).map(g => `<li>${esc(g.replace(/^Profi: /, ""))}</li>`).join("")}</ul></section>
+      <section class="card prose">${s.basis}${lvl === 3 ? `<div class="deep"><h3>🏆 Mehr wissen</h3>${s.profi}</div>` : ""}</section>
       <section class="card"><h3>⚠️ Typische Fehler</h3>
-        <div class="errs">${s.errors.map(([f, r, w]) => `<div class="err"><div class="err-f">✗ ${esc(f)}</div><div class="err-r">✓ ${esc(r)}</div><p class="muted small">${esc(w)}</p></div>`).join("")}</div></section>
-      <div class="actions center">
-        ${S.read[s.id] ? `<a class="btn" href="#/station/${s.id}/beispiele">Weiter zu den Beispielen →</a>` : `<button class="btn primary" id="readDone">✓ Gelesen! (+10 XP)</button>`}
-      </div>`;
-    $$(".seg button", body).forEach(b => b.onclick = () => { S.readLevel = +b.dataset.r; save(); stationRead(s, body); });
+        <div class="errs">${s.errors.map(([f, r, w]) => `<div class="err"><div class="err-f">✗ ${esc(f)}</div><div class="err-r">✓ ${esc(r)}</div><p class="muted small">${esc(w)}</p></div>`).join("")}</div></section>`}
+      <section class="card merke"><h3>📌 Merke</h3><p>${s.merke}</p></section>
+      <div class="actions center">${doneBtn}</div>`;
+    $$(".seg button", body).forEach(b => b.onclick = () => { S.readLevel = +b.dataset.r; S._readSet = s.id; save(); sfx.click(); stationRead(s, body); });
     const rd = $("#readDone");
     if (rd) rd.onclick = () => {
       S.read[s.id] = true; save(); addXP(10, rd); sfx.ok();
@@ -319,12 +329,12 @@
   function stationPractice(s, body) {
     const rl = recLevel(s.id);
     body.innerHTML = `
-      <p class="muted">Wähle dein Niveau. Jede Runde hat 8 Aufgaben. Falsch gelöste Aufgaben kommen in ähnlicher Form noch einmal.</p>
+      <p class="muted">Wie schwer soll es sein? Eine Runde = 8 Aufgaben.</p>
       <div class="levels">${[1, 2, 3].map(l => `
         <a class="card lvcard ${LV[l].cls} ${l === rl ? "rec" : ""}" href="#/quiz/${s.id}/${l}">
           ${l === rl ? `<span class="recflag">Empfohlen</span>` : ""}
           <div class="lv-ico">${LV[l].icon}</div>
-          <div class="grow"><h3>${LV[l].name}</h3><p class="muted small">${LV[l].desc} · ${LV[l].xp} XP pro Aufgabe</p></div>
+          <div class="grow"><h3>${LV[l].name}</h3><p class="muted small">${LV[l].desc}</p></div>
           <div class="lv-stars">${starStr(starsOf(s.id, l))}</div>
         </a>`).join("")}</div>
       ${["gleichungen", "loesen"].includes(s.id) ? `<a class="card tile wide" href="#/waage"><div class="t-big">⚖️</div><div><h3>Waage-Trainer</h3><p class="muted small">Forme Gleichungen selbst um – Schritt für Schritt.</p></div></a>` : ""}`;
@@ -336,14 +346,14 @@
     app.innerHTML = `
       <h1>🎯 Üben & Spielen</h1>
       <div class="grid grid-2">
-        <a class="card tile daily ${Object.keys(d).length ? "done" : ""}" href="#/challenge"><div class="t-big">📅</div><h3>Tages-Challenge</h3><p class="muted small">${Object.keys(d).length ? "Heute geschafft ✓" : "Jeden Tag neu · Bonus-XP"}</p></a>
-        <a class="card tile" href="#/blitz"><div class="t-big">⚡</div><h3>Blitzrunde</h3><p class="muted small">60 Sekunden Kopfrechnen · Rekord ${S.blitzBest}</p></a>
-        <a class="card tile" href="#/waage"><div class="t-big">⚖️</div><h3>Waage-Trainer</h3><p class="muted small">Gleichungen selbst umformen · ${S.waageSolved} gelöst</p></a>
-        <a class="card tile" href="#/memory"><div class="t-big">🧩</div><h3>Term-Memory</h3><p class="muted small">Finde gleichwertige Terme</p></a>
-        <a class="card tile" href="#/quiz/mix/0"><div class="t-big">🎲</div><h3>Mix-Quiz</h3><p class="muted small">Aufgaben aus allen Stationen</p></a>
-        <a class="card tile ${bossUnlocked() ? "" : "locked"}" href="#/boss"><div class="t-big">${bossUnlocked() ? "🐉" : "🔒"}</div><h3>Term-Drache</h3><p class="muted small">${bossUnlocked() ? "Der Endgegner wartet" : `Freischalten: Sterne in 4 Stationen (${unlockedCount()}/4)`}</p></a>
+        <a class="card tile daily ${Object.keys(d).length ? "done" : ""}" href="#/challenge"><div class="t-big">📅</div><h3>Aufgabe des Tages</h3><p class="muted small">${Object.keys(d).length ? "Heute geschafft ✓" : "Jeden Tag neu"}</p></a>
+        <a class="card tile" href="#/blitz"><div class="t-big">⚡</div><h3>Blitzrunde</h3><p class="muted small">60 Sekunden · Rekord ${S.blitzBest}</p></a>
+        <a class="card tile" href="#/waage"><div class="t-big">⚖️</div><h3>Waage-Trainer</h3><p class="muted small">Gleichungen lösen</p></a>
+        <a class="card tile" href="#/memory"><div class="t-big">🧩</div><h3>Term-Memory</h3><p class="muted small">Paare finden</p></a>
+        <a class="card tile" href="#/quiz/mix/0"><div class="t-big">🎲</div><h3>Mix-Quiz</h3><p class="muted small">Von allem etwas</p></a>
+        <a class="card tile ${bossUnlocked() ? "" : "locked"}" href="#/boss"><div class="t-big">${bossUnlocked() ? "🐉" : "🔒"}</div><h3>Term-Drache</h3><p class="muted small">${bossUnlocked() ? "Der Endgegner" : `Noch gesperrt (${unlockedCount()}/4)`}</p></a>
       </div>
-      <h2 class="section">Stationen direkt üben</h2>
+      <h2 class="section">Themen üben</h2><p class="muted small">🌱 leicht · 🚀 mittel · 🏆 schwer</p>
       <div class="qlist">${STATIONS.map(s => `
         <div class="card qrow" style="--c:${s.color}"><span class="m-icon sm">${s.icon}</span><span class="grow"><b>${s.nr}. ${esc(s.title)}</b></span>
           ${[1, 2, 3].map(l => `<a class="qbtn ${LV[l].cls}" href="#/quiz/${s.id}/${l}" title="${LV[l].name}">${LV[l].icon}<small>${starsOf(s.id, l) ? "★".repeat(starsOf(s.id, l)) : "–"}</small></a>`).join("")}
@@ -409,13 +419,14 @@
         <div class="qtext">${q.prompt}</div>
         ${q.expr ? `<div class="task-expr">${M(q.expr)}</div>` : ""}
         <div id="answer"></div>
+        <div id="easybox"></div>
         <div id="hintbox"></div>
         <div id="fb"></div>
         <div class="actions" id="qactions"></div>
       </section>`;
     const A = $("#answer"), FB = $("#fb"), ACT = $("#qactions");
     let finished = false;
-    const hintBtn = () => q.hint ? `<button class="btn ghost" id="hintBtn">💡 Tipp</button>` : "";
+    const hintBtn = () => `${sname ? `<button class="btn ghost help" id="easyHelpBtn">🗣️ Einfach erklärt</button>` : ""}${q.hint ? `<button class="btn ghost help" id="hintBtn">💡 Tipp</button>` : ""}`;
 
     function showHint() {
       q.usedHint = true; st.hint = true;
@@ -430,7 +441,7 @@
         if (counts) st.first++;
         st.combo++; st.maxCombo = Math.max(st.maxCombo, st.combo);
         if (st.combo === 5) award("combo5"); if (st.combo === 10) award("combo10");
-        let xp = LV[q.level].xp; if (q.usedHint) xp = Math.ceil(xp / 2); if (q.extra) xp = Math.ceil(xp / 2);
+        let xp = LV[q.level].xp; if (q.extra) xp = Math.ceil(xp / 2);
         if (st.combo >= 3) xp += Math.min(10, (st.combo - 2) * 2);
         st.xp += xp; S.correct++;
         sfx.ok(); buzz(15);
@@ -547,6 +558,18 @@
       };
     }
     const hb = $("#hintBtn"); if (hb) hb.onclick = showHint;
+    const eb = $("#easyHelpBtn");
+    if (eb) {
+      eb.onclick = () => {
+        const box = $("#easybox");
+        if (box.innerHTML) { box.innerHTML = ""; eb.classList.remove("on"); return; }
+        eb.classList.add("on"); sfx.click();
+        const typing = q.kind === "input" ? `<p class="small"><b>⌨️ Eintippen:</b> ${q.mode === "num" ? "Tippe nur die Zahl, z. B. <b>7</b> oder <b>-3</b>. Brüche so: <b>3/4</b>." : "Zum Beispiel <b>3x+4</b>. Für ² nimm die Taste ². Klammern: ( und )."}</p>` : q.kind === "order" ? `<p class="small"><b>👆 So geht’s:</b> Tippe die Zeilen nacheinander an – zuerst die oberste.</p>` : "";
+        box.innerHTML = `<div class="easybox"><button class="eb-x" aria-label="Schließen">✕</button><p class="eyebrow">🗣️ Einfach erklärt · ${esc(sname.title)}</p>${easyBlock(sname, false)}${typing}</div>`;
+        $(".eb-x", box).onclick = () => eb.click();
+      };
+      if (S.settings.easy) eb.click();
+    }
   }
 
   function finishQuiz(st) {
@@ -842,23 +865,18 @@
         <div class="hero-av">${S.avatar}</div>
         <div class="hero-main"><h1>${esc(S.name)}</h1><p><b>${esc(L.name)}</b> · Level ${L.n}</p><div class="xpbar"><div style="width:${L.pct}%"></div></div><p class="muted small">${S.xp} XP${L.next ? ` · nächstes Level bei ${L.next.xp} XP` : ""}</p></div>
       </section>
-      <div class="statgrid">
-        <div class="card stat"><b>⭐ ${totalStars()}</b><span>von 72 Sternen</span></div>
-        <div class="card stat"><b>🎯 ${S.answered}</b><span>Aufgaben (${acc} % richtig)</span></div>
-        <div class="card stat"><b>🔥 ${S.streak.count || 0}</b><span>Tage in Folge</span></div>
-        <div class="card stat"><b>⚡ ${S.blitzBest}</b><span>Blitz-Rekord</span></div>
-        <div class="card stat"><b>⚖️ ${S.waageSolved}</b><span>Waage gelöst</span></div>
-        <div class="card stat"><b>🐉 ${S.bossWins}</b><span>Drachen besiegt</span></div>
+      <div class="statgrid three">
+        <div class="card stat"><b>⭐ ${totalStars()}</b><span>Sterne</span></div>
+        <div class="card stat"><b>🎯 ${S.answered}</b><span>Aufgaben</span></div>
+        <div class="card stat"><b>🔥 ${S.streak.count || 0}</b><span>Tage am Stück</span></div>
       </div>
       <h2 class="section">Avatar</h2>
       <div class="card"><div class="avpick">${AVATARS.map(a => `<button class="av ${a.a === S.avatar ? "sel" : ""} ${a.lv > L.n ? "lock" : ""}" data-av="${a.a}" ${a.lv > L.n ? `disabled title="ab Level ${a.lv}"` : ""}>${a.a}${a.lv > L.n ? `<small>Lv ${a.lv}</small>` : ""}</button>`).join("")}</div></div>
       <h2 class="section">Abzeichen (${Object.keys(S.badges).length}/${BADGES.length})</h2>
       <div class="badges">${BADGES.map(b => `<div class="badge ${S.badges[b.id] ? "on" : ""}" title="${esc(b.desc)}"><div class="b-icon">${S.badges[b.id] ? b.icon : "🔒"}</div><b>${esc(b.name)}</b><span>${esc(b.desc)}</span></div>`).join("")}</div>
-      <h2 class="section">Sterne pro Station</h2>
-      <div class="card"><table class="tbl stars-tbl"><tr><th>Station</th><th>${LV[1].icon}</th><th>${LV[2].icon}</th><th>${LV[3].icon}</th></tr>
-        ${STATIONS.map(s => `<tr><td><a href="#/station/${s.id}/ueben">${s.icon} ${esc(s.title)}</a></td>${[1, 2, 3].map(l => `<td>${starStr(starsOf(s.id, l))}</td>`).join("")}</tr>`).join("")}</table></div>
       <h2 class="section">Einstellungen</h2>
       <div class="card settings">
+        <label class="sw"><input type="checkbox" id="sEasy" ${S.settings.easy ? "checked" : ""}><span>🗣️ Einfache Sprache</span></label>
         <label class="sw"><input type="checkbox" id="sSound" ${S.settings.sound ? "checked" : ""}><span>🔊 Töne</span></label>
         <label class="sw"><input type="checkbox" id="sFx" ${S.settings.fx ? "checked" : ""}><span>✨ Effekte (Konfetti, Wackeln, Vibration)</span></label>
         <form id="renameF" class="row left"><input id="rn" maxlength="20" value="${esc(S.name)}" aria-label="Spitzname"><button class="btn">Namen ändern</button></form>
@@ -866,6 +884,7 @@
       </div>`;
     $$(".av:not(.lock)", app).forEach(b => b.onclick = () => { S.avatar = b.dataset.av; save(); sfx.click(); viewMe(); renderTop(); });
     $("#sSound").onchange = e => { S.settings.sound = e.target.checked; save(); sfx.ok(); };
+    $("#sEasy").onchange = e => { S.settings.easy = e.target.checked; save(); renderTop(); };
     $("#sFx").onchange = e => { S.settings.fx = e.target.checked; save(); };
     $("#renameF").onsubmit = e => { e.preventDefault(); S.name = $("#rn").value.trim().slice(0, 20) || S.name; save(); toast("Name gespeichert"); viewMe(); };
     let armed = false;

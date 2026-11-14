@@ -161,6 +161,51 @@
     },
   ];
 
+  // ---------- Einfache Sprache: kurze Sätze, ein Gedanke pro Zeile ----------
+  const EASY = {
+    terme: {
+      text: [`Manchmal kennst du eine Zahl noch nicht.`, `Dann schreibst du einen Buchstaben, zum Beispiel ${m("x")}.`, `${m("x")} ist ein <b>Platzhalter</b> für eine Zahl.`, `Ein <b>Term</b> ist eine Rechnung mit Zahlen und Buchstaben. Zum Beispiel: ${m("3x + 5")}.`, `${m("3x")} heißt: 3 mal ${m("x")}.`],
+      steps: ["Lies den Satz langsam.", "Suche die Signalwörter: <b>plus</b> (Summe, mehr), <b>minus</b> (Differenz, weniger), <b>mal</b> (-fache, Produkt), <b>geteilt</b> (Hälfte, Quotient).", `Schreibe für „eine Zahl“ ein ${m("x")}.`, "Schreibe die Rechnung in der richtigen Reihenfolge auf."],
+      words: [["das Doppelte", "mal 2"], ["das Dreifache", "mal 3"], ["vermehrt um", "plus"], ["vermindert um", "minus"], ["die Hälfte", "geteilt durch 2"]],
+    },
+    einsetzen: {
+      text: [`Du bekommst eine Zahl für ${m("x")}.`, `Du schreibst diese Zahl statt ${m("x")} hin.`, `Dann rechnest du aus.`, `Wichtig: <b>Punkt vor Strich</b>. Erst mal und geteilt, dann plus und minus.`],
+      steps: [`Streiche das ${m("x")} durch.`, "Schreibe die Zahl hin. Ist die Zahl negativ? Dann setze Klammern: (−3).", "Rechne erst Klammern, dann mal und geteilt, dann plus und minus."],
+      words: [["einsetzen", "die Zahl statt x hinschreiben"], ["Wert", "das Ergebnis"], ["Punkt vor Strich", "erst · und :, dann + und −"]],
+    },
+    zusammenfassen: {
+      text: [`Gleiche Dinge darfst du zusammenzählen.`, `3 Äpfel + 5 Äpfel = 8 Äpfel.`, `Genauso: ${m("3x + 5x = 8x")}.`, `Aber: Äpfel und Birnen kannst du nicht zusammenzählen.`, `Genauso: ${m("3x + 2")} bleibt ${m("3x + 2")}.`],
+      steps: [`Suche alle Teile mit ${m("x")}. Zähle sie zusammen.`, "Suche alle Zahlen ohne x. Zähle sie zusammen.", "Achtung: Das Minus gehört immer zu der Zahl dahinter."],
+      words: [["gleichartig", "gleicher Buchstabe"], ["zusammenfassen", "Gleiches zusammenzählen"]],
+    },
+    klammern: {
+      text: [`Vor der Klammer steht eine Zahl.`, `Diese Zahl rechnest du mal <b>jedes</b> Teil in der Klammer.`, `Beispiel: ${m("3(x + 4) = 3x + 12")}.`, `Steht ein Minus vor der Klammer? Dann drehst du alle Zeichen in der Klammer um: aus + wird −, aus − wird +.`],
+      steps: ["Male einen Pfeil von der Zahl vor der Klammer zu jedem Teil in der Klammer.", "Rechne jeden Pfeil aus: Zahl mal Teil.", "Achte auf die Zeichen: Minus mal Minus ist Plus."],
+      words: [["ausmultiplizieren", "Klammer wegmachen, alles mal nehmen"], ["Minusklammer", "Minus vor der Klammer: Zeichen umdrehen"]],
+    },
+    ausklammern: {
+      text: [`Ausklammern ist das <b>Rückwärts-Rechnen</b> vom Ausmultiplizieren.`, `Du suchst eine Zahl, die in allen Teilen steckt.`, `Beispiel: In ${m("4x")} und in ${m("8")} steckt die 4.`, `Also: ${m("4x + 8 = 4(x + 2)")}.`],
+      steps: ["Welche Zahl teilt alle Zahlen? Nimm die größte.", "Schreibe diese Zahl vor die Klammer.", "Teile jedes Teil durch die Zahl. Schreibe das Ergebnis in die Klammer.", "Probe: Rechne die Klammer wieder aus."],
+      words: [["Faktor", "Zahl beim Malnehmen"], ["gemeinsam", "steckt in allen Teilen"]],
+    },
+    gleichungen: {
+      text: [`Eine <b>Gleichung</b> hat ein Gleich-Zeichen =.`, `Links und rechts ist gleich viel. Wie bei einer Waage.`, `Die <b>Lösung</b> ist die Zahl für ${m("x")}, bei der beide Seiten gleich sind.`, `Bei der <b>Probe</b> setzt du die Zahl ein und prüfst: Ist links gleich rechts?`],
+      steps: ["Setze die Zahl für x ein.", "Rechne die linke Seite aus.", "Rechne die rechte Seite aus.", "Gleich? Dann ist es die Lösung."],
+      words: [["Lösung", "die passende Zahl für x"], ["Probe", "einsetzen und prüfen"], ["Umformung", "auf beiden Seiten das Gleiche rechnen"]],
+    },
+    loesen: {
+      text: [`Du willst wissen: Welche Zahl ist ${m("x")}?`, `Dazu muss ${m("x")} am Ende allein stehen.`, `Du rechnest auf <b>beiden Seiten das Gleiche</b>.`, `Du machst alles rückwärts: Aus plus wird minus. Aus mal wird geteilt.`],
+      steps: ["Zuerst: Die Zahl ohne x wegmachen. Steht da +5? Rechne auf beiden Seiten −5.", "Dann: Die Zahl vor dem x wegmachen. Steht da 3x? Teile beide Seiten durch 3.", "Am Ende steht da: x = Zahl."],
+      words: [["Gegenrechnung", "+ ↔ −, · ↔ :"], ["beide Seiten", "links und rechts vom ="]],
+    },
+    sachaufgaben: {
+      text: [`In einer Textaufgabe steckt eine Gleichung.`, `Du suchst eine Zahl. Diese Zahl nennst du ${m("x")}.`, `Dann schreibst du den Text als Rechnung auf.`, `Am Ende schreibst du einen Antwortsatz.`],
+      steps: ["Was wird gesucht? Das ist x.", "Übersetze den Text Stück für Stück in eine Rechnung.", "Löse die Gleichung.", "Antworte in einem Satz."],
+      words: [["Ich denke mir eine Zahl", "x"], ["Ich erhalte …", "= …"], ["zusammen", "plus"]],
+    },
+  };
+  STATIONS.forEach(s => s.easy = EASY[s.id]);
+
   const LEVELS_INFO = [
     { n: 1, name: "Zahlen-Neuling" }, { n: 2, name: "Variablen-Entdecker" }, { n: 3, name: "Term-Bastler" }, { n: 4, name: "Klammer-Knacker" },
     { n: 5, name: "Waage-Meister" }, { n: 6, name: "Gleichungs-Löser" }, { n: 7, name: "Algebra-Ass" }, { n: 8, name: "x-Flüsterer" },
