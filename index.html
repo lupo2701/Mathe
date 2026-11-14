@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>x-Quest · Terme & Gleichungen · Mathe Klasse 8</title>
+  <meta name="description" content="Lern-App Mathe Klasse 8: Terme und Gleichungen mit Basis-, Standard- und Profi-Aufgaben, Waage-Trainer, Blitzrunde, Memory und Term-Drache.">
+  <meta name="theme-color" content="#f6f5fb">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='26' fill='%235b5bd6'/><text x='50' y='72' font-size='70' text-anchor='middle' fill='white' font-family='Georgia,serif' font-style='italic'>x</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/" class="brand" aria-label="Startseite"><span class="logo">x</span><span class="brand-text">x-Quest</span></a>
+    <nav class="topnav" aria-label="Hauptnavigation">
+      <a href="#/" data-nav="home">Start</a>
+      <a href="#/lernen" data-nav="lernen">Lernen</a>
+      <a href="#/ueben" data-nav="ueben">Üben</a>
+      <a href="#/ich" data-nav="ich">Ich</a>
+    </nav>
+    <div class="hud" id="hud"></div>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <nav class="bottomnav" aria-label="Navigation">
+    <a href="#/" data-nav="home"><span aria-hidden="true">🏠</span>Start</a>
+    <a href="#/lernen" data-nav="lernen"><span aria-hidden="true">📖</span>Lernen</a>
+    <a href="#/ueben" data-nav="ueben"><span aria-hidden="true">🎯</span>Üben</a>
+    <a href="#/ich" data-nav="ich"><span aria-hidden="true">🙂</span>Ich</a>
+  </nav>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <script src="js/core.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/content.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
